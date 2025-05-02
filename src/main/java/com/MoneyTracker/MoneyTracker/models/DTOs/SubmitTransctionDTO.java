@@ -5,7 +5,7 @@ import java.time.LocalDate;
 
 @Data
 
-public class transctionDTO {
+public class SubmitTransctionDTO {
 
 
     private Long userId;

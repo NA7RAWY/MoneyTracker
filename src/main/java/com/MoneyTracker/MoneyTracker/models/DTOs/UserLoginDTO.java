@@ -3,7 +3,7 @@ package com.MoneyTracker.MoneyTracker.models.DTOs;
 import lombok.Data;
 
 @Data
-public class userLoginDTO {
+public class UserLoginDTO {
     
     private String email;
 

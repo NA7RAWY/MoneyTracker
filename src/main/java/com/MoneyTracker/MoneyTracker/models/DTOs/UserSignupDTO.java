@@ -1,7 +1,7 @@
 package com.MoneyTracker.MoneyTracker.models.DTOs;
 import lombok.Data;
 @Data
-public class userSignupDTO {
+public class UserSignupDTO {
     private String firstName;
 
     private String lastName;
