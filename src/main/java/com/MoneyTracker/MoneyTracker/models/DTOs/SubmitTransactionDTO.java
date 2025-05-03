@@ -1,14 +1,15 @@
 package com.MoneyTracker.MoneyTracker.models.DTOs;
+
+import com.MoneyTracker.MoneyTracker.models.Transaction;
+
 import lombok.Data;
 
 import java.time.LocalDate;
 
-import com.MoneyTracker.MoneyTracker.models.Transaction;
-
 @Data
+public class SubmitTransactionDTO {
 
-public class SubmitTransctionDTO {
-
+    private Long id;
 
     private Long userId;
 
@@ -18,17 +19,17 @@ public class SubmitTransctionDTO {
 
     private Boolean isIncome;
 
+    
     private String category;
 
-    public static SubmitTransctionDTO toTransctionDTO(Transaction transaction) {
-        SubmitTransctionDTO transactionDTO = new SubmitTransctionDTO();
+    public static SubmitTransactionDTO toTransactionDTO(Transaction transaction) {
+        SubmitTransactionDTO transactionDTO = new SubmitTransactionDTO();
+        transactionDTO.setId(transaction.getId());
         transactionDTO.setUserId(transaction.getUser().getId());
         transactionDTO.setTransactionDate(transaction.getTransactionDate());
         transactionDTO.setAmount(transaction.getAmount());
         transactionDTO.setIsIncome(transaction.isIncome());
         transactionDTO.setCategory(transaction.getCategory());
         return transactionDTO;
+    }
 }
-
-    }    
-
