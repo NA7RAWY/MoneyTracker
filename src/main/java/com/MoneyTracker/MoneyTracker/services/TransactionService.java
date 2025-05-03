@@ -8,7 +8,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,6 +55,52 @@ public class TransactionService {
                 .collect(Collectors.toList());
     }
 
+    public List<SubmitTransactionDTO> getTransactionsByUserIdAndMonth(Long userId, int year, int month) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found"));
+        
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+        
+        return transactionRepository.findByUserAndTransactionDateBetween(user, startDate, endDate)
+                .stream()
+                .map(SubmitTransactionDTO::toTransactionDTO)
+                .collect(Collectors.toList());
+    }
+
+    public Map<String, Double> getMonthlySpendingByCategory(Long userId, int year, int month) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found"));
+        
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+        
+        return transactionRepository.findByUserAndTransactionDateBetween(user, startDate, endDate)
+                .stream()
+                .filter(transaction -> !transaction.isIncome()) // Only include expenses
+                .collect(Collectors.groupingBy(
+                        Transaction::getCategory,
+                        Collectors.summingDouble(Transaction::getAmount)
+                ));
+    }
+
+    public Double getMonthlyIncome(Long userId, int year, int month) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found"));
+        
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+        
+        return transactionRepository.findByUserAndTransactionDateBetween(user, startDate, endDate)
+                .stream()
+                .filter(Transaction::isIncome) // Only include income
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+    }
+
     @Transactional
     public SubmitTransactionDTO updateTransaction(Long id, SubmitTransactionDTO transactionDTO) {
         Transaction transaction = transactionRepository.findById(id)
@@ -70,6 +119,7 @@ public class TransactionService {
 
         return SubmitTransactionDTO.toTransactionDTO(updatedTransaction);
     }
+
     @Transactional
     public void deleteTransaction(Long id) {
         if (!transactionRepository.existsById(id)) {
