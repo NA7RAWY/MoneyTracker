@@ -1,10 +1,10 @@
 package com.MoneyTracker.MoneyTracker.services;
+
 import com.MoneyTracker.MoneyTracker.models.Transaction;
 import com.MoneyTracker.MoneyTracker.models.User;
 import com.MoneyTracker.MoneyTracker.models.DTOs.SubmitTransactionDTO;
 import com.MoneyTracker.MoneyTracker.repositories.TransactionRepository;
 import com.MoneyTracker.MoneyTracker.repositories.UserRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,6 @@ public class TransactionService {
     @Autowired
     private UserRepository userRepository;
 
-    @Transactional
     public SubmitTransactionDTO createTransaction(SubmitTransactionDTO transactionDTO) {
         User user = userRepository.findById(transactionDTO.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User with ID " + transactionDTO.getUserId() + " not found"));
@@ -101,7 +100,6 @@ public class TransactionService {
                 .sum();
     }
 
-    @Transactional
     public SubmitTransactionDTO updateTransaction(Long id, SubmitTransactionDTO transactionDTO) {
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Transaction with ID " + id + " not found"));
@@ -120,7 +118,6 @@ public class TransactionService {
         return SubmitTransactionDTO.toTransactionDTO(updatedTransaction);
     }
 
-    @Transactional
     public void deleteTransaction(Long id) {
         if (!transactionRepository.existsById(id)) {
             throw new IllegalArgumentException("Transaction with ID " + id + " not found");
