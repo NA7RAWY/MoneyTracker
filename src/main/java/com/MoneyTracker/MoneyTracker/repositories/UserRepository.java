@@ -1,7 +1,11 @@
 package com.MoneyTracker.MoneyTracker.repositories;
 
-import com.MoneyTracker.MoneyTracker.models.User;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.MoneyTracker.MoneyTracker.models.User;
+
 public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
 }
