@@ -1,0 +1,30 @@
+Use a stable Python 3.11 slim image as the base
+
+FROM python:3.11-slim
+
+Set the working directory inside the container
+
+WORKDIR /app
+
+Copy the Flask service file
+
+COPY charts.py .
+
+Install system dependencies for matplotlib (e.g., for font rendering)
+
+RUN apt-get update && apt-get install -y --no-install-recommends 
+libfreetype6-dev 
+libpng-dev 
+&& rm -rf /var/lib/apt/lists/*
+
+Install required Python packages
+
+RUN pip install --no-cache-dir flask requests matplotlib flask-cors
+
+Expose the port the Flask app runs on
+
+EXPOSE 5000
+
+Run the Flask application
+
+CMD ["python", "charts.py"]
