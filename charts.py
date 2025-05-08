@@ -1,12 +1,35 @@
-import requests
 from flask import Flask, jsonify, send_file, request
+from flask_cors import CORS
+from confluent_kafka import Producer, Consumer, KafkaError
 import matplotlib.pyplot as plt
 from io import BytesIO
-from flask_cors import CORS
+import json
+import os
+import time
+import uuid
 
 app = Flask(__name__)
 CORS(app)
-SPRING_API_URL = "http://localhost:8080/api/transactions/user/{user_id}/spending-by-category"
+
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
+
+producer = Producer({
+    'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS
+})
+
+consumer = Consumer({
+    'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
+    'group.id': 'chart-group',
+    'auto.offset.reset': 'latest'
+})
+
+consumer.subscribe(['spending-responses'])
+
+def delivery_report(err, msg):
+    if err is not None:
+        print(f'Message delivery failed: {err}')
+    else:
+        print(f'Message delivered to {msg.topic()} [{msg.partition()}]')
 
 @app.route('/api/spending-by-category-chart', methods=['GET'])
 def spending_by_category_chart():
@@ -17,28 +40,56 @@ def spending_by_category_chart():
     if not user_id or not year or not month:
         return jsonify({'error': 'Missing user_id, year or month parameters'}), 400
 
-    response = requests.get(SPRING_API_URL.format(user_id=user_id), params={'year': year, 'month': month})
-    
-    if response.status_code != 200:
-        return jsonify({'error': 'Failed to fetch data from Spring API'}), 500
-    
-    expense_data = response.json()  
-    
-    categories = list(expense_data.keys())
-    amounts = list(expense_data.values())
+    request_id = str(uuid.uuid4())
+    request_data = {
+        'userId': user_id,
+        'year': year,
+        'month': month,
+        'requestId': request_id
+    }
 
-    fig, ax = plt.subplots()
-    ax.bar(categories, amounts)
+    try:
+        producer.produce('spending-requests', key=request_id, value=json.dumps(request_data), callback=delivery_report)
+        producer.flush()
+    except Exception as e:
+        return jsonify({'error': f'Failed to send Kafka message: {str(e)}'}), 500
 
-    ax.set_xlabel('Category')
-    ax.set_ylabel('Amount')
-    ax.set_title(f'Monthly Spending by Category')
+    # Poll for response
+    start_time = time.time()
+    timeout = 10  # seconds
+    while time.time() - start_time < timeout:
+        msg = consumer.poll(1.0)
+        if msg is None:
+            continue
+        if msg.error():
+            if msg.error().code() == KafkaError._PARTITION_EOF:
+                continue
+            else:
+                return jsonify({'error': f'Kafka consumer error: {msg.error()}'}), 500
 
-    img = BytesIO()
-    plt.savefig(img, format='png')
-    img.seek(0)
+        response_data = json.loads(msg.value().decode('utf-8'))
+        if response_data.get('requestId') == request_id:
+            spending_by_category = response_data.get('spendingByCategory', {})
+            if not spending_by_category:
+                return jsonify({'error': 'No data returned from Spring service'}), 404
 
-    return send_file(img, mimetype='image/png')
+            categories = list(spending_by_category.keys())
+            amounts = list(spending_by_category.values())
+
+            fig, ax = plt.subplots()
+            ax.bar(categories, amounts)
+            ax.set_xlabel('Category')
+            ax.set_ylabel('Amount')
+            ax.set_title(f'Monthly Spending by Category')
+
+            img = BytesIO()
+            plt.savefig(img, format='png')
+            plt.close(fig)
+            img.seek(0)
+
+            return send_file(img, mimetype='image/png')
+
+    return jsonify({'error': 'Timeout waiting for response'}), 504
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
