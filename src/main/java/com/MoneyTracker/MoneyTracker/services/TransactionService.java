@@ -69,8 +69,8 @@ public class TransactionService {
     }
 
     public Map<String, Double> getMonthlySpendingByCategory(Long userId, int year, int month) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found"));
+        User user = userRepository.findById((long) userId)
+                .orElseThrow(() -> new IllegalArgumentException("User with ID not found"));
         
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);

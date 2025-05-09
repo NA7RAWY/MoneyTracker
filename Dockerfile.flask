@@ -1,32 +1,21 @@
-#Use a stable Python 3.11 slim image as the base
-
 FROM python:3.11-slim
-
-#Set the working directory inside the container
 
 WORKDIR /app
 
-#Copy the Flask service file
-
 COPY charts.py .
-
-#Install system dependencies for matplotlib
+COPY requirements.txt .
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-libfreetype6-dev \
-libpng-dev \
-fontconfig \
-pkg-config \
-&& rm -rf /var/lib/apt/lists/*
+    libfreetype6-dev \
+    libpng-dev \
+    fontconfig \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
-#Install Python dependencies
-
-RUN pip install --no-cache-dir flask requests matplotlib flask-cors gunicorn
-
-#Expose port
+RUN pip install --no-cache-dir --default-timeout=100 \
+    -i https://mirrors.aliyun.com/pypi/simple/ \
+    -r requirements.txt
 
 EXPOSE 5000
-
-#Run with gunicorn for production
 
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "charts:app"]
