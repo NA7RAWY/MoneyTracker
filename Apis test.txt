@@ -1,0 +1,84 @@
+ Login POST:
+http://localhost:8080/api/auth/login
+{
+"email":"h@h",
+"password":"123"
+}
+ 
+Signup POST:
+http://localhost:8080/api/auth/signup
+ 
+{
+"firstName":"kareem",
+"lastName":"hany",
+"email":"h@h",
+"password":"123",
+"jobType":"Fulltime"
+} 
+ 
+ 
+ 
+ 
+ Create Transaction POST:
+ http://localhost:8080/api/transactions/create
+{
+  "userId": 1,
+  "transactionDate": "2025-05-10",
+  "amount": 100.50,
+  "isIncome": false,
+  "category": "Groceries"
+}           
+
+
+Get Transaction by ID GET:
+ http://localhost:8080/api/transactions/1
+
+
+
+Get Transactions by for User by User ID GET:
+
+http://localhost:8080/api/transactions/user/1
+
+
+
+Get all Transactions for User in  a Month GET:
+
+http://localhost:8080/api/transactions/user/1/month?year=2025&month=1
+
+
+
+Get Monthly Spending by Category GET:
+
+http://localhost:8080/api/transactions/user/1/spending-by-category?year=2025&month=1
+
+
+
+
+Get Monthly Income GET :
+
+http://localhost:8080/api/transactions/user/1/income?year=2025&month=1
+
+
+Update Transaction PUT:
+http://localhost:8080/api/transactions/1
+
+
+{
+    "id": 1,
+    "userId": 1,
+    "transactionDate": "2025-01-05",
+    "amount": 3000.0,
+    "isIncome": true,
+    "category": "Salary"
+}
+
+Delete Transaction Delete:
+
+http://localhost:8080/api/transactions/1
+
+
+
+
+GET CHARTS FLASK GET:
+
+http://localhost:5000/api/spending-by-category-chart?user_id=3&year=2025&month=1
