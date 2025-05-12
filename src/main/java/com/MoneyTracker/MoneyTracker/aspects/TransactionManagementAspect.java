@@ -25,7 +25,7 @@ public class TransactionManagementAspect {
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
-    @Around("execution(* com.MoneyTracker.MoneyTracker.services.TransactionService.*(..))")
+    @Around("execution(* com.MoneyTracker.MoneyTracker.services.*.*(..))")
     public Object manageTransaction(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().getName();
         logger.info("Starting transaction for method: {}", methodName);

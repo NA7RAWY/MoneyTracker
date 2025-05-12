@@ -14,7 +14,7 @@ public class PerformanceMonitoringAspect {
     private static final Logger logger = LoggerFactory.getLogger(PerformanceMonitoringAspect.class);
     private static final long PERFORMANCE_THRESHOLD_MS = 1000; // Threshold for "too long" in milliseconds
 
-    @Around("execution(* com.MoneyTracker.MoneyTracker.services.TransactionService.*(..))")
+    @Around("execution(* com.MoneyTracker.MoneyTracker.services.*.*(..))")
     public Object monitorPerformance(ProceedingJoinPoint joinPoint) throws Throwable {
         long startTime = System.nanoTime();
         String methodName = joinPoint.getSignature().getName();
