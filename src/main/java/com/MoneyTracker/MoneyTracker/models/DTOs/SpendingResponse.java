@@ -5,7 +5,7 @@ import java.util.Map;
 
 @Data
 public class SpendingResponse {
-    private int userId; // Changed from Long to int
+    private int userId; 
     private int year;
     private int month;
     private String requestId;

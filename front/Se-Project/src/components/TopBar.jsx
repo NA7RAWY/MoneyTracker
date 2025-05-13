@@ -11,10 +11,16 @@ function TopBar() {
     navigate('/');
   };
 
+  const handleSiteNameClick = () => {
+    navigate('/main');
+  };
+
   return (
     <div className="TopBar">
       <img src={website_logo} alt='website-logo' className='website-logo' />
-      <h1 className='website_name'>Budget Tracker</h1>
+      <h1 className='website_name' onClick={handleSiteNameClick} style={{ cursor: 'pointer' }}>
+        Budget Tracker
+      </h1>
       <button onClick={handleLogout} className='logout_button'>LogOut</button>
     </div>
   );

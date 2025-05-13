@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { Container } from 'react-bootstrap';
 import '../styles/HistoryPage.css';
 
 function HistoryPage() {
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -16,7 +18,16 @@ function HistoryPage() {
     category: ''
   });
 
+  // Check login status
   useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
+
+  // Fetch transactions
+  const fetchTransactions = async () => {
     const userId = localStorage.getItem('userId');
     if (!userId) {
       console.error('User not logged in');
@@ -25,35 +36,36 @@ function HistoryPage() {
       return;
     }
 
-    const fetchTransactions = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        console.log(`Fetching transactions for userId: ${userId}, year: ${selectedYear}, month: ${selectedMonth}`);
-        const response = await fetch(
-          `http://localhost:8080/api/transactions/user/${userId}/month?year=${selectedYear}&month=${selectedMonth}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-              'Content-Type': 'application/json'
-            }
+    setLoading(true);
+    setError(null);
+    try {
+      console.log(`Fetching transactions for userId: ${userId}, year: ${selectedYear}, month: ${selectedMonth}`);
+      const response = await fetch(
+        `http://localhost:8080/api/transactions/user/${userId}/month?year=${selectedYear}&month=${selectedMonth}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'application/json'
           }
-        );
-        console.log('Response status:', response.status);
-        const data = await response.json();
-        console.log('Response data:', data);
-        if (!response.ok) {
-          throw new Error(data.message || 'Failed to fetch transactions');
         }
-        setTransactions(data);
-      } catch (error) {
-        console.error('Error fetching transactions:', error);
-        setError(error.message || 'An error occurred while fetching transactions');
-      } finally {
-        setLoading(false);
+      );
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch transactions');
       }
-    };
+      setTransactions(data);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      setError(error.message || 'An error occurred while fetching transactions');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Fetch transactions on mount or date change
+  useEffect(() => {
     fetchTransactions();
   }, [selectedYear, selectedMonth]);
 
@@ -105,9 +117,8 @@ function HistoryPage() {
         throw new Error(data.message || 'Failed to update transaction');
       }
 
-      setTransactions(transactions.map(t =>
-        t.id === transactionId ? data : t
-      ));
+      // Refetch transactions to ensure UI is up-to-date
+      await fetchTransactions();
       setEditingTransactionId(null);
     } catch (error) {
       console.error('Error updating transaction:', error);
@@ -132,8 +143,8 @@ function HistoryPage() {
         throw new Error('Failed to delete transaction');
       }
 
-      // Remove the transaction from the state
-      setTransactions(transactions.filter(t => t.id !== transactionId));
+      // Refetch transactions to ensure UI is up-to-date
+      await fetchTransactions();
     } catch (error) {
       console.error('Error deleting transaction:', error);
       setError(error.message || 'Failed to delete transaction');

@@ -3,11 +3,19 @@ import TopBar from "../components/TopBar";
 import UserCard from "../components/userCard";
 import IncomeCard from "../components/IncomeCard";
 import ExpenseCard from "../components/ExpenseCard";
-import { useNavigate } from 'react-router-dom';
-import '../styles/mainPage.css';
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react"; 
+import "../styles/mainPage.css";
 
 function MainPage() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      navigate("/", { replace: true });
+    }
+  }, [navigate]); 
 
   return (
     <>
@@ -26,7 +34,7 @@ function MainPage() {
                 <ExpenseCard />
               </Col>
               <Col md={12} className="mt-4 text-center">
-                <Button variant="primary" onClick={() => navigate('/history')}>
+                <Button variant="primary" onClick={() => navigate("/history")}>
                   History
                 </Button>
               </Col>

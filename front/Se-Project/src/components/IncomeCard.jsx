@@ -8,8 +8,18 @@ function IncomeCard() {
   });
   const [error, setError] = useState('');
 
+  const getCurrentDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'amount' && value < 0) {
+      setError('Amount cannot be negative');
+      return;
+    }
+    setError('');
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -26,10 +36,25 @@ function IncomeCard() {
       return;
     }
 
+    // Validate amount
+    const amount = parseFloat(formData.amount);
+    if (amount <= 0) {
+      setError('Amount must be a positive number');
+      return;
+    }
+
+    // Validate date
+    const today = new Date();
+    const selectedDate = new Date(formData.transactionDate);
+    if (selectedDate > today) {
+      setError('Transaction date cannot be in the future');
+      return;
+    }
+
     const payload = {
       userId: parseInt(userId),
       transactionDate: formData.transactionDate,
-      amount: parseFloat(formData.amount),
+      amount: amount,
       isIncome: true,
       category: 'Income'
     };
@@ -82,6 +107,7 @@ function IncomeCard() {
               name="transactionDate"
               value={formData.transactionDate}
               onChange={handleChange}
+              max={getCurrentDate()}
               required
             />
           </div>
@@ -95,6 +121,8 @@ function IncomeCard() {
               value={formData.amount}
               onChange={handleChange}
               placeholder="e.g., 100"
+              min="0"
+              step="0.01"
               required
             />
           </div>

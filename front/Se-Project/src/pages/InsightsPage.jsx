@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import TopBar from '../components/TopBar';
 import '../styles/insightsPage.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function InsightsPage() {
   const navigate = useNavigate();
@@ -15,6 +15,15 @@ function InsightsPage() {
   const [chartUrl, setChartUrl] = useState('');
   const [noExpenseMessage, setNoExpenseMessage] = useState('');
 
+  // Check login status
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
+
+  // Fetch data when page loads or date changes
   useEffect(() => {
     const userId = localStorage.getItem('userId');
     if (!userId) {
@@ -74,6 +83,7 @@ function InsightsPage() {
         const contentType = chartResponse.headers.get('content-type');
         if (chartResponse.ok && contentType && contentType.includes('image')) {
           const blob = await chartResponse.blob();
+          // Revoke previous URL to prevent memory leaks
           if (chartUrl) {
             URL.revokeObjectURL(chartUrl);
           }
@@ -94,7 +104,14 @@ function InsightsPage() {
     };
 
     fetchData();
-  }, [selectedYear, selectedMonth, chartUrl]);
+
+    // Cleanup chart URL on unmount
+    return () => {
+      if (chartUrl) {
+        URL.revokeObjectURL(chartUrl);
+      }
+    };
+  }, [selectedYear, selectedMonth]); // Removed chartUrl from dependencies
 
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
   const months = Array.from({ length: 12 }, (_, i) => i + 1);

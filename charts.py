@@ -20,8 +20,8 @@ producer = Producer({
 consumer = Consumer({
     'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
     'group.id': 'chart-group',
-    'auto.offset.reset': 'earliest',  # Changed to earliest
-    'enable.auto.commit': False  # Disable auto-commit for manual control
+    'auto.offset.reset': 'earliest',
+    'enable.auto.commit': False
 })
 
 consumer.subscribe(['spending-responses'])
@@ -55,9 +55,8 @@ def spending_by_category_chart():
     except Exception as e:
         return jsonify({'error': f'Failed to send Kafka message: {str(e)}'}), 500
 
-    # Poll for response
     start_time = time.time()
-    timeout = 10  # seconds
+    timeout = 10
     while time.time() - start_time < timeout:
         msg = consumer.poll(1.0)
         if msg is None:
@@ -72,7 +71,7 @@ def spending_by_category_chart():
         if response_data.get('requestId') == request_id:
             spending_by_category = response_data.get('spendingByCategory', {})
             if not spending_by_category:
-                consumer.commit(msg)  # Commit offset
+                consumer.commit(msg, asynchronous=True)
                 return jsonify({'error': 'No data returned from Spring service'}), 404
 
             categories = list(spending_by_category.keys())
@@ -89,7 +88,7 @@ def spending_by_category_chart():
             plt.close(fig)
             img.seek(0)
 
-            consumer.commit(msg)  # Commit offset after successful processing
+            consumer.commit(msg, asynchronous=True)
             return send_file(img, mimetype='image/png')
 
     return jsonify({'error': 'Timeout waiting for response'}), 504
